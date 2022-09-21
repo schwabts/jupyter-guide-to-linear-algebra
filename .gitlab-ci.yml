@@ -1,0 +1,33 @@
+
+stages:          # List of stages for jobs, and their order of execution
+  - build
+  - deploy
+
+jupyter-build:      # This job runs in the build stage, which runs first.
+  stage: build
+  image: python:slim
+  script:
+    - echo Updated website on $(date)
+    - pip install -U jupyter-book
+    - pip install -r requirements.txt
+    - jupyter-book clean .
+    - jupyter-book build .
+  artifacts:
+    paths:
+      - _build/
+
+pages:
+  stage: deploy
+  # The Docker image that will be used to deploy your book
+  image: busybox:latest
+  script:
+    - mv _build/html public
+  artifacts:
+    paths:
+      # The folder that contains the files to be exposed at the Page URL
+      - public
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
